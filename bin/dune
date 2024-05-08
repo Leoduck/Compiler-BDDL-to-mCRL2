@@ -1,0 +1,9 @@
+(executables
+ (public_names bddl parsepp lexpp mcrl ttt_mcrl compall compare rewrall)
+ (names bddl parsepp lexpp mcrl_test tictactoe_mcrl_test compilebench tests bench_rewr)
+ (libraries lib unix))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

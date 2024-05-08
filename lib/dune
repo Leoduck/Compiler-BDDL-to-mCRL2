@@ -1,0 +1,14 @@
+(library
+ (name lib)
+ (libraries menhirLib ))
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser)
+ (flags --explain --inspection --table --dump))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
