@@ -1,7 +1,7 @@
 (executables
- (public_names bddl parsepp lexpp mcrl ttt_mcrl compall compare rewrall)
- (names bddl parsepp lexpp mcrl_test tictactoe_mcrl_test compilebench tests bench_rewr)
- (libraries lib unix))
+ (public_names bddl parsepp lexpp  compall compare rewrall bddlrewr)
+ (names bddl parsepp lexpp  compilebench tests bench_rewr bddlrewr)
+ (libraries lib unix str))
 
 (env
  (dev

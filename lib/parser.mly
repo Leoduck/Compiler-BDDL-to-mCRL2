@@ -89,4 +89,3 @@ problem:
 
 program:
     d=domain p=problem NL* EOF   { Spec{domain= d; problem= p} }
-    (*d = domain NL* EOF {Spec{domain= d; problem= Problem{boardsize=(0L,0L);init=[];bgoals=[];wgoals=[]; bfirst=true}}}*)

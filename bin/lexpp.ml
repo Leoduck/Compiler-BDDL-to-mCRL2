@@ -1,10 +1,10 @@
-module Lexer = Lib.Lexer
-module Fm = Lib.File_manager
 open Lib
+module Lexer = Lexer
+module Fm = File_manager
 
+(*for pretty-printing tokens read from BDDL spec*)
 
 let pp_lex domain_file problem_file =
-    (* let file_in = open_in file in *)
     let bddl_spec = Fm.read_file domain_file ^ Fm.read_file problem_file ^ "\n" in
     Token_printer.lexpp bddl_spec 
 

@@ -1,4 +1,4 @@
-
+(**AST representing the BDDL specification*)
 type pred = | Black | White | Open
 
 type int_exp = 
@@ -17,11 +17,11 @@ type action = Action of {name: string; pre : cond list; eff : cond list}
 
 type goal = 
 | Goal of {conditions : cond list}
-| NoGoal 
+| NoGoal    (*breaker goal*)
 
 type domain = Domain of {bactions : action list; wactions: action list}
 
-(*The init is not right...*)
+(*The init is technically not right - should only be static positions*)
 type problem = Problem of {boardsize: int64*int64; init: cond list; bgoals : goal list; wgoals : goal list; bfirst: bool}
 
 type specification = Spec of {domain : domain; problem : problem}

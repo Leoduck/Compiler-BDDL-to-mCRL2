@@ -1,7 +1,7 @@
-module Fm = Lib.File_manager
-module Rtb = Lib.RuntimeBindings
-module Ast = Lib.Ast
 open Lib
+module Fm = File_manager
+module Rtb = RuntimeBindings
+module Ast = Ast
 
 let find_boardsize spec =
     match spec with |Ast.Spec {problem=Problem{boardsize= x,y;_};_} -> Int64.to_int x , Int64.to_int y
@@ -32,7 +32,7 @@ let _ =
         then gen_and_return_mcfs "black" "white"
         else gen_and_return_mcfs "white" "black"
       in
-    Fm.write_to_file target_name (Mcrl2.string_of_spec tspec);
+    Fm.write_to_file target_name (Pretty_mcrl.string_of_spec tspec);
     print_endline ("specification has been compiled to " ^ target_name);
 
     (*solving*)
@@ -52,4 +52,4 @@ let _ =
     ignore (Sys.command ("rm " ^ mcf2));
     )
 
-  with Invalid_argument _ -> Printf.printf "Wrong number of arguments given \n"
+  with Invalid_argument s -> print_endline s

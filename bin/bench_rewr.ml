@@ -1,8 +1,8 @@
-module Parser = Lib.Parser
-module Lexer = Lib.Lexer
-module Pp = Lib.Pretty
-module Fm = Lib.File_manager
 open Lib
+module Pp = Pretty_bddl
+module Fm = File_manager
+
+(*file used for rewriting BDDL specifications for benchmarking*)
 
 let rewr_dir source_dir dest_dir =
   let file_names = Sys.readdir source_dir in
@@ -17,10 +17,11 @@ let rewr_dir source_dir dest_dir =
       let bddl_spec = Fm.read_file domian_file ^ Fm.read_file  filepath ^ "\n" in
       let lex_string = Lexing.from_string bddl_spec in
       let prg = Parser.program Lexer.token lex_string in
+      (*adding breaker keywords where necessary*)
       let rewritten = Pp.str_of_spec prg in
-      (*let _ = print_endline source_dir in*)
+      (*special handling of evader-pursuer*)
       let fixed = (if source_dir = "benchmarks/GDDL_models/evader_pursuer/" 
-        then (print_endline "found evader!"; rewritten ^ "breaker \n")
+        then rewritten ^ "breaker \n"
         else rewritten) in
       Fm.write_to_file (dest_dir ^ name_hint ^ ".ig") fixed;
       ) file_names 
@@ -35,9 +36,9 @@ let _ =
         (Sys.readdir "benchmarks/GDDL_models");
   
   (*testing that they can still be parsed*)
-  let bddl_spec = Fm.read_file "test_bench/evader_pursuer/3x3_3_e-3-3_p-2-2.ig" in
+  (*let bddl_spec = Fm.read_file "test_bench/evader_pursuer/3x3_3_e-3-3_p-2-2.ig" in
   let lex_buf = Lexing.from_string bddl_spec in
   let spec = Parser.program Lexer.token lex_buf in
   let content1, _ = Fm.spec_to_string spec in
-  Fm.write_to_file ("fixed" ^ ".mcrl2") content1
+  Fm.write_to_file ("fixed" ^ ".mcrl2") content1*)
 

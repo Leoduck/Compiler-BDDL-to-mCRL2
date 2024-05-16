@@ -12,14 +12,14 @@ let write_to_file (path : string) (content : string) =
   Printf.fprintf oc "%s" content;
   close_out oc
 
-  (*translate spec into 2 copies of mcrl2 spec, with comments for the necessary mcf files*)
+(*translate spec into 2 copies of mcrl2 spec, with comments for the necessary mcf files*)
 let spec_to_string spec =
   let tspec, starting = Codegen.trans_spec spec "Game" in
   let mcf1, mcf2 = if starting = "black"
     then "%black_starting \n" , "%white_second \n" 
     else "%white_starting \n" , "%black_second \n" 
   in
-  mcf1 ^ (Mcrl2.string_of_spec tspec), mcf2 ^ (Mcrl2.string_of_spec tspec)
+  mcf1 ^ (Pretty_mcrl.string_of_spec tspec), mcf2 ^ (Pretty_mcrl.string_of_spec tspec)
   
 (** domain -> problem -> fname - compiles the domain and problem to a file*)
 let compile_specification filepath fname =

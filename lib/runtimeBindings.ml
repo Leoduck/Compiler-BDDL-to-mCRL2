@@ -1,5 +1,7 @@
 open Mcrl2
 
+(** static definitions for translation*)
+
 let static_sorts:sort_spec = 
     { sorts = [ ("Piece", Struct ["black";"white";"open"])
               ; ("Row"  , List (NamedSort "Piece"))

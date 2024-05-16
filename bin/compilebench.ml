@@ -1,5 +1,7 @@
 open Lib
 
+(*file used to compile all BDDL specifications for benchmarking*)
+
 let print_file filepath =
   Printf.printf "Processing file: %s\n" filepath
 
@@ -20,6 +22,7 @@ let _ =
         ignore (Sys.command ("mkdir " ^ dir));
         compile_directory ("test_bench/" ^ fn ^ "/") (dir ^ "/") 
     ) (Sys.readdir "test_bench");
+    (*generating mcf's*)
     File_manager.write_to_file  "translated/black_starting.mcf" (RuntimeBindings.starting_mu_calc "black");
     File_manager.write_to_file  "translated/white_starting.mcf" (RuntimeBindings.starting_mu_calc "white");
     File_manager.write_to_file  "translated/black_second.mcf" (RuntimeBindings.second_mu_calc "black");

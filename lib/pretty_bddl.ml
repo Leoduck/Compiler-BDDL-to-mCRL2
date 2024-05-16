@@ -1,4 +1,5 @@
 open Ast
+(** functionality for generating string of BDDL AST*)
 
 let mapcat sep func li = (String.concat sep) (List.map func li)
 
@@ -61,11 +62,11 @@ let print_problem problem =
             Printf.sprintf "#boardsize\n %s %s\n" (Int64.to_string (fst boardsize)) (Int64.to_string (snd boardsize)) ^
             "#init \n" ^  mapcat "" print_cond init ^
             (*generating breaker keyword...*)
-            "\n#blackgoals\n" ^ 
+            "\n#blackgoal\n" ^ 
             (if List.length bgoals = 0 
                 then  "breaker"
                 else mapcat "\n" print_goal bgoals) ^
-            "\n#whitegoals\n" ^
+            "\n#whitegoal\n" ^
             (if List.length wgoals = 0 
                 then "breaker"
                 else mapcat "\n" print_goal wgoals) ^

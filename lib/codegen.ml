@@ -112,7 +112,8 @@ let make_bounds (conds:Ast.cond list):dataExpr list =
     let x_bounds = make_bound (fst min_max) "x" in
     let y_bounds = make_bound (snd min_max) "y" in
     x_bounds @ y_bounds 
-    
+
+(*helper functions for concatinating many dataexps / sortexps using some seperator*)
 let build_dataexpr op conds = 
   List.fold_left (fun acc elem -> DataBinop (op, acc, elem)) (List.hd conds) (List.tl conds)
 
@@ -123,6 +124,7 @@ let hash_sortexpr sorts =
 let trans_goal (goal : Ast.goal) (col : string) (quant_bounds)=
   match goal with
   | Goal {conditions} ->
+    (*maker-maker goal*)
     let gbounds = make_bounds conditions in
     let tconds = List.map trans_condition conditions in
     build_dataexpr And (DataBinop (Eq, Id "p", Id col) :: tconds @ gbounds @ quant_bounds)
@@ -130,12 +132,9 @@ let trans_goal (goal : Ast.goal) (col : string) (quant_bounds)=
     (*single breaker goal*)
     let other string = if string = "white" then "black" else "white" in
     let bounds = [DataBinop(Lt,Id "x",Id "xmax"); DataBinop(Lt,Id "y",Id"ymax")] in                       
-    let no_moves = build_dataexpr Or [FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id (other col);Id "b"]); (*no legal for opposite player*)
-                                      FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id col ;Id "b"])] in     (*no legal for current*)
-    let data = build_dataexpr And (no_moves :: bounds) in
-    DataBinop(And, 
-      NotUnop (QuantExpr (Exists, [(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)], data)), 
-      DataBinop (Eq,Id "p", Id col))
+    let data = build_dataexpr And (FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id (other col);Id "b"]) :: bounds) in
+    let ex_black = NotUnop (QuantExpr (Exists,[(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)],data)) in
+    DataBinop (And, ex_black , DataBinop (Eq,Id "p", Id col))
 
 let make_breaker color = 
     (*double breaker goal*)
@@ -153,8 +152,6 @@ let make_breaker_breaker =
     build_dataexpr Or (bwin :: [wwin])
 
 let make_with_maker bgoals wgoals =
-
-
   (*figure out if exists needed*)
   let all_cond_goals = List.flatten 
                             (List.map 
@@ -280,25 +277,28 @@ let trans_action (act : Ast.action) player env =
   env.eqns := move_def :: isLegal_def :: current_eqn;
   env
 
-let trans_domain (domain : Ast.domain) env =
-  (*for making extra isLegal cases*)
-  let (Domain { bactions; wactions }) = domain in
-  let b_act_names = List.fold_left (fun acc act -> match act with |Ast.Action {name ;_} -> 
-    sanitize_name name :: acc ) [] bactions in
-  let w_act_names = List.fold_left (fun acc act -> match act with |Ast.Action {name ;_} -> 
-    sanitize_name name :: acc ) [] wactions in 
-
+(**making additional isLegal cases for non-mirrored moves*)
+let make_extra_cases bacts wacts = 
+  let to_names acts = List.fold_left (fun acc act -> match act with |Ast.Action {name ;_} -> 
+    sanitize_name name :: acc ) [] acts in
+  
+  let to_eqns ids opp = List.fold_left (fun acc name -> 
+    (None, FunExpr(Id "isLegal", [Id "x"; Id "y"; Id name ; Id opp ; Id "b"]), Id "false") :: acc) [] ids in
+  
+  let b_act_names = to_names bacts in
+  let w_act_names = to_names wacts in
   let only_black = List.fold_left (fun acc name -> if List.mem name w_act_names then acc else name :: acc) [] b_act_names in
   let only_white = List.fold_left (fun acc name -> if List.mem name b_act_names then acc else name :: acc) [] w_act_names in
+  (to_eqns only_black "white" , to_eqns only_white "black")
 
-  let not_white_eqns = 
-    List.fold_left (fun acc name -> 
-      (None, FunExpr(Id "isLegal", [Id "x"; Id "y"; Id name ; Id "white"; Id "b"]), Id "false") :: acc) [] only_black in
-  
-  let not_black_eqns = 
-    List.fold_left (fun acc name -> 
-      (None, FunExpr(Id "isLegal", [Id "x"; Id "y"; Id name ; Id "black"; Id "b"]), Id "false") :: acc) [] only_white in
+(** Translate domain into isLegal and move mappings and eqns*)
+let trans_domain (domain : Ast.domain) env =
+  (*for making extra isLegal cases*)
 
+  let (Domain { bactions; wactions }) = domain in
+  let not_black_eqns , not_white_eqns = make_extra_cases bactions  wactions in
+
+  (*regular translations*)
   let env = List.fold_left (fun acc elem -> trans_action elem "black" acc) env bactions in
   let env = List.fold_left (fun acc elem -> trans_action elem "white" acc) env wactions in
   let args_move : dataExpr list = [ Id "x"; Id "y"; Id "a"; Id "b" ] in
@@ -321,6 +321,7 @@ let trans_domain (domain : Ast.domain) env =
   env.eqns := move_eqn :: current_eqns @ not_white_eqns @ not_black_eqns;
   env
 
+(**translate given specification, returns mCRL2 AST and the starting player*)
 let trans_spec (spec : Ast.specification)(gamename : string) : specification * string =
   let (Spec { domain; problem }) = spec in
   let empty_env : env =
