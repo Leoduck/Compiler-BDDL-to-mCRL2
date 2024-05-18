@@ -2,8 +2,22 @@ open Lib
 module Pp = Pretty_bddl
 module Fm = File_manager
 
-(*file used for rewriting BDDL specifications for benchmarking*)
+(*file used for rewriting BDDL specifications for benchmarking to include breakers*)
 
+(** Function to find the line in a string and insert a string on the next line *)
+let add_line file line to_insert =
+  let lines = String.split_on_char '\n' file in
+  let rec aux acc = function
+    | [] -> List.rev acc
+    | hd :: tl ->
+      if hd = line then
+        aux (to_insert :: hd :: acc) tl
+      else
+        aux (hd :: acc) tl
+  in
+  String.concat "\n" (aux [] lines)
+
+(** Adds the breaker keyword to the *)
 let rewr_dir source_dir dest_dir =
   let file_names = Sys.readdir source_dir in
   let domian_file = source_dir ^ "domain.ig" in
@@ -19,9 +33,12 @@ let rewr_dir source_dir dest_dir =
       let prg = Parser.program Lexer.token lex_string in
       (*adding breaker keywords where necessary*)
       let rewritten = Pp.str_of_spec prg in
-      (*special handling of evader-pursuer*)
-      let fixed = (if source_dir = "benchmarks/GDDL_models/evader_pursuer/" 
-        then rewritten ^ "breaker \n"
+      (*special handling of evader-pursuer and breakthrough*)
+      let fixed = (
+          if (source_dir = "benchmarks/GDDL_models/evader_pursuer/" ) 
+            then add_line rewritten "#whitegoal" "breaker"
+          else if  source_dir = "benchmarks/GDDL_models/breakthrough/" || source_dir = "benchmarks/GDDL_models/breakthrough-second-player/" 
+            then add_line (add_line rewritten "#blackgoal" "breaker") "#whitegoal" "breaker"
         else rewritten) in
       Fm.write_to_file (dest_dir ^ name_hint ^ ".ig") fixed;
       ) file_names 

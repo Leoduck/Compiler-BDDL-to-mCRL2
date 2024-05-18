@@ -62,7 +62,7 @@ let rec trans_condition_set conds =
       let params = trans_cond_params hd in
       FunExpr( Id "set",[fst (fst params); snd (fst params); snd params;trans_condition_set tl;] )
 
-  (*Takes in a cond and returns potential add or minus operations -> 0L if none *)
+  (** Takes in a cond and returns potential add or minus operations -> 0L if none *)
   let int_in_place (cond:Ast.cond) = 
     let (Condition { pred = _; place } | NotCondition { pred = _; place }) = cond in
     let get_int (exp:int_exp):int =
@@ -83,7 +83,7 @@ let rec trans_condition_set conds =
 
 (** Makes bounding expressions from a list of conditions *)
 let make_bounds (conds:Ast.cond list):dataExpr list =
-    (*find minimum and maximum value for x and y in list - for use in making bounds*) 
+    (** Find minimum and maximum value for x and y in list - for use in making bounds*) 
     let find_min_max lst =
         let min_fst, max_fst, min_snd, max_snd =
             List.fold_left
@@ -93,7 +93,7 @@ let make_bounds (conds:Ast.cond list):dataExpr list =
             in
         ((min_fst, max_fst),(min_snd, max_snd))
     in
-    (*given min max bound for a variable - generate conditions to avoid oob*)
+    (** Given min max bound for a variable - generate conditions to avoid oob*)
     let make_bound (min_max:int * int) (cord:string) =
         let minimum = fst min_max in
         let maximum = snd min_max in
@@ -113,12 +113,22 @@ let make_bounds (conds:Ast.cond list):dataExpr list =
     let y_bounds = make_bound (snd min_max) "y" in
     x_bounds @ y_bounds 
 
-(*helper functions for concatinating many dataexps / sortexps using some seperator*)
+(** Helper function for concatinating many dataexps using some seperator*)
 let build_dataexpr op conds = 
   List.fold_left (fun acc elem -> DataBinop (op, acc, elem)) (List.hd conds) (List.tl conds)
 
+(** Helper function for concatinating many sortexps using some seperator*)
 let hash_sortexpr sorts =
   List.fold_left (fun acc elem -> Hash (acc, elem)) (List.hd sorts) (List.tl sorts)
+
+let make_breaker color = 
+    let other string = if string = "white" then "black" else "white" in
+    let data = build_dataexpr And [DataBinop(Lt,Id "x",Id "xmax"); 
+                                   DataBinop(Lt,Id "y",Id "ymax"); 
+                                   FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id (other color);Id "b"]); 
+                                   ]
+    in
+    DataBinop(And, NotUnop(QuantExpr(Exists,[(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)], data)), DataBinop (Eq,Id "p", Id color))
 
 (*translate list of goal conditions into expr like tcond1 && tcond2 && ... *)
 let trans_goal (goal : Ast.goal) (col : string) (quant_bounds)=
@@ -129,33 +139,20 @@ let trans_goal (goal : Ast.goal) (col : string) (quant_bounds)=
     let tconds = List.map trans_condition conditions in
     build_dataexpr And (DataBinop (Eq, Id "p", Id col) :: tconds @ gbounds @ quant_bounds)
   | NoGoal ->
-    (*single breaker goal*)
-    let other string = if string = "white" then "black" else "white" in
-    let bounds = [DataBinop(Lt,Id "x",Id "xmax"); DataBinop(Lt,Id "y",Id"ymax")] in                       
-    let data = build_dataexpr And (FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id (other col);Id "b"]) :: bounds) in
-    let ex_black = NotUnop (QuantExpr (Exists,[(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)],data)) in
-    DataBinop (And, ex_black , DataBinop (Eq,Id "p", Id col))
+    make_breaker col
 
-let make_breaker color = 
-    (*double breaker goal*)
-    let other string = if string = "white" then "black" else "white" in
-    let data = build_dataexpr And [DataBinop(Lt,Id "x",Id "xmax"); 
-                                   DataBinop(Lt,Id "y",Id"ymax"); 
-                                   FunExpr(Id "isLegal",[Id "x";Id "y";Id "a";Id (other color);Id "b"]); 
-                                   ]
-    in
-    DataBinop(And, NotUnop(QuantExpr(Exists,[(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)], data)), DataBinop (Eq,Id "p", Id color))
-
+   (* 
 let make_breaker_breaker =
     let bwin = make_breaker "black" in
     let wwin = make_breaker "white" in
     build_dataexpr Or (bwin :: [wwin])
+   *)
 
 let make_with_maker bgoals wgoals =
   (*figure out if exists needed*)
   let all_cond_goals = List.flatten 
                             (List.map 
-                                (fun goal -> match goal with |Goal {conditions} -> conditions ) 
+                                (fun goal -> match goal with |Goal {conditions} -> conditions  | NoGoal -> []) 
                             (List.filter (fun goal -> match goal with |Goal _ -> true | NoGoal -> false) (wgoals @ bgoals))) in
   let free = List.fold_left (
     fun acc elem -> 
@@ -232,14 +229,17 @@ let trans_prob (prob : Ast.problem) env =
         ( Hash (NamedSort "Piece", NamedSort "Board"),
           NamedSort "Bool" ) )
   in
+  (*
   (*diffenrentiating maker-maker, maker-breaker*)
   let noWhite = List.mem NoGoal wgoals in
   let noBlack = List.mem NoGoal bgoals in
   (*if both players breaker (noGoal in list) -> breaker breaker case*)
   let goal_exp = if noWhite && noBlack
-    then  make_breaker_breaker
+    then make_breaker_breaker
     else make_with_maker bgoals wgoals
-  in 
+  in
+  *)
+  let goal_exp = make_with_maker bgoals wgoals in
   let goal_eqn = (None, FunExpr (Id "did_win", [Id "p"; Id "b"]),goal_exp) in 
 
   (*updating environment*)

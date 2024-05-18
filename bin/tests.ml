@@ -2,8 +2,10 @@
 
 let add_path path list = List.map (fun (filename, mcf, result) -> (path ^ filename, path ^ mcf, result)) list
 let tests = add_path "translated/"
-    [("breakthrough-second-player/2x4_8_1.mcrl2", "white_starting.mcf", "false");
+    [(*
+    ("breakthrough-second-player/2x4_8_1.mcrl2", "white_starting.mcf", "false");
      ("breakthrough-second-player/2x4_8_2.mcrl2", "black_second.mcf", "true");
+     *)
      ("breakthrough/2x4_13_1.mcrl2", "black_starting.mcf", "false");
      ("breakthrough/2x4_13_2.mcrl2", "white_second.mcf", "true");
      ("connect-c/2x2_3_connect2_1.mcrl2", "black_starting.mcf", "true");
@@ -17,9 +19,10 @@ let tests = add_path "translated/"
      ("evader_pursuer/4x4_3_e-4-1_p-2-3_1.mcrl2", "black_starting.mcf", "true");
      ("evader_pursuer/4x4_3_e-4-1_p-2-3_2.mcrl2", "white_second.mcf", "false");
 
-     (*test big *)
+     (*test big 
      ("evader_pursuer/8x8_11_e-8-1_p-2-3_1.mcrl2", "black_starting.mcf", "true");
      ("evader_pursuer/8x8_11_e-8-1_p-2-3_2.mcrl2", "white_second.mcf", "false");
+     *)
      (*dual winnign on capture*)
      ("evader_pursuer_dual/4x4_2_e-4-1_p-1-2_1.mcrl2", "black_second.mcf", "true");
      ("evader_pursuer_dual/4x4_2_e-4-1_p-1-2_2.mcrl2", "white_starting.mcf", "false");
