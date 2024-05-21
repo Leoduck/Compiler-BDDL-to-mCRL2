@@ -52,10 +52,6 @@ let static_process (gamename : string) : proc_spec =
       proc = ITE (FunExpr (Id "did_win",[FunExpr (Id "other",[Id "player"]);Id "board"]),
                   PBinop (Dot, Action ("win", [FunExpr (Id "other",[Id "player"])]), 
                                Action (gamename,[Id "board"; Id "player"])),
-                  Some (ITE (
-                    FunExpr (Id "did_win",[Id "player" ;Id "board"]),
-                    PBinop (Dot, Action ("win", [Id "player"]), 
-                               Action (gamename,[Id "board"; Id "player"])),
                     Some (SumExpr ([(["d"],NamedSort "Action_enum");(["x";"y"],Nat)],
                                  ITE (
                                         DataBinop (And, DataBinop (Lt, Id "x", Id "xmax"),
@@ -65,9 +61,7 @@ let static_process (gamename : string) : proc_spec =
                                                    , Action (gamename , [FunExpr (Id "move", [Id "x"; Id "y"; Id "d"; Id "player" ; Id "board"]);
                                                                          FunExpr (Id "other", [Id "player"])])),
                                         None
-                                 ) )))
-                      )
-                )
+                                 ) ))) 
   }
 
 let starting_mu_calc col = 
