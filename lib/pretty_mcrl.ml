@@ -1,4 +1,4 @@
-open Mcrl2
+open Mcrl2_ast
 
 (** functionality for generating string of mCRL2 AST*)
 

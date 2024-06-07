@@ -12,6 +12,8 @@ let tests = add_path "translated/"
      ("connect-c/2x2_3_connect2_2.mcrl2", "white_second.mcf", "false");
      ("domineering/2x2_2_1.mcrl2", "black_starting.mcf", "true");
      ("domineering/2x2_2_2.mcrl2", "white_second.mcf", "false");
+     ("domineering/3x3_4_2.mcrl2", "black_starting.mcf", "true");
+     ("domineering/3x3_4_2.mcrl2", "white_second.mcf", "false");
      (*winning on only field*)
      ("evader_pursuer/3x3_3_e-3-3_p-2-2_1.mcrl2", "black_starting.mcf", "false");
      ("evader_pursuer/3x3_3_e-3-3_p-2-2_2.mcrl2", "white_second.mcf", "true");
@@ -23,6 +25,7 @@ let tests = add_path "translated/"
      ("evader_pursuer/8x8_11_e-8-1_p-2-3_1.mcrl2", "black_starting.mcf", "true");
      ("evader_pursuer/8x8_11_e-8-1_p-2-3_2.mcrl2", "white_second.mcf", "false");
      *)
+     
      (*dual winnign on capture*)
      ("evader_pursuer_dual/4x4_2_e-4-1_p-1-2_1.mcrl2", "black_second.mcf", "true");
      ("evader_pursuer_dual/4x4_2_e-4-1_p-1-2_2.mcrl2", "white_starting.mcf", "false");

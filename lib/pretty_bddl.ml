@@ -1,4 +1,4 @@
-open Ast
+open Bddl_ast
 (** functionality for generating string of BDDL AST*)
 
 let mapcat sep func li = (String.concat sep) (List.map func li)

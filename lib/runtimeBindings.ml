@@ -1,4 +1,4 @@
-open Mcrl2
+open Mcrl2_ast
 
 (** static definitions for translation*)
 

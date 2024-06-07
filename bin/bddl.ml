@@ -1,10 +1,10 @@
 open Lib
 module Fm = File_manager
 module Rtb = RuntimeBindings
-module Ast = Ast
+module Ast = Bddl_ast
 
 let find_boardsize spec =
-    match spec with |Ast.Spec {problem=Problem{boardsize= x,y;_};_} -> Int64.to_int x , Int64.to_int y
+    match spec with | Ast.Spec {problem=Problem{boardsize= x,y;_};_} -> Int64.to_int x , Int64.to_int y
 
 let gen_and_return_mcfs col1 col2 =
   let _ = Fm.write_to_file (col1 ^ "_starting.mcf") (Rtb.starting_mu_calc col1) in

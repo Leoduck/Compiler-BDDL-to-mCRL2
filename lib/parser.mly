@@ -1,5 +1,5 @@
 %{
-    open Ast
+    open Bddl_ast
 %}
 
 

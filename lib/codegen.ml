@@ -1,5 +1,5 @@
-open Ast
-open Mcrl2
+open Bddl_ast
+open Mcrl2_ast
 
 type env = {
   action_enum : id list ref;
@@ -43,7 +43,7 @@ let trans_pos (e1 : e1) (e2 : e2) =
   (me1, me2)
 
 (** translate condition to expr like get(x,y) == pred *)
-let trans_condition (cond : Ast.cond) =
+let trans_condition (cond : cond) =
   let exp op e1 e2 pred = DataBinop (op, FunExpr (Id "get", [ e1; e2 ; Id "b"]), pred_to_id pred) in
   match cond with
   | Condition { pred; place = e1, e2 } -> let me1, me2 = trans_pos e1 e2 in exp Eq me1 me2 pred
@@ -63,7 +63,7 @@ let rec trans_condition_set conds =
       FunExpr( Id "set",[fst (fst params); snd (fst params); snd params;trans_condition_set tl;] )
 
   (** Takes in a cond and returns potential add or minus operations -> 0L if none *)
-  let int_in_place (cond:Ast.cond) = 
+  let int_in_place (cond:cond) = 
     let (Condition { pred = _; place } | NotCondition { pred = _; place }) = cond in
     let get_int (exp:int_exp):int =
         match exp with
@@ -82,7 +82,7 @@ let rec trans_condition_set conds =
 
 
 (** Makes bounding expressions from a list of conditions *)
-let make_bounds (conds:Ast.cond list):dataExpr list =
+let make_bounds (conds:cond list):dataExpr list =
     (** Find minimum and maximum value for x and y in list - for use in making bounds*) 
     let find_min_max lst =
         let min_fst, max_fst, min_snd, max_snd =
@@ -131,7 +131,7 @@ let make_breaker color =
     DataBinop(And, NotUnop(QuantExpr(Exists,[(["a"],(NamedSort "Action_enum"));(["x"; "y"],Nat)], data)), DataBinop (Eq,Id "p", Id color))
 
 (*translate list of goal conditions into expr like tcond1 && tcond2 && ... *)
-let trans_goal (goal : Ast.goal) (col : string) (quant_bounds)=
+let trans_goal (goal : goal) (col : string) (quant_bounds)=
   match goal with
   | Goal {conditions} ->
     (*maker-maker goal*)
@@ -211,7 +211,7 @@ let make_board init xmax ymax =
       ListExpr row :: acc)
     [] (List.init (Int64.to_int ymax) (fun i -> i)))
 
-let trans_prob (prob : Ast.problem) env =
+let trans_prob (prob : problem) env =
   let (Problem { boardsize = xmax, ymax; init; bgoals; wgoals ; bfirst}) = prob in
   (*boardsize*)
   let bs_mappings = [ (["xmax"; "ymax" ], Nat) ] in
@@ -255,7 +255,7 @@ let sanitize_name name =
   String.map (fun c -> if c <> '-' then c else '_') name
 
 (** Translate an action into isLegal and move for player*)
-let trans_action (act : Ast.action) player env =
+let trans_action (act : action) player env =
   let (Action {name; pre; eff }) = act in
 
   (*Adding the action to the enumarator*)
@@ -279,7 +279,7 @@ let trans_action (act : Ast.action) player env =
 
 (**making additional isLegal cases for non-mirrored moves*)
 let make_extra_cases bacts wacts = 
-  let to_names acts = List.fold_left (fun acc act -> match act with |Ast.Action {name ;_} -> 
+  let to_names acts = List.fold_left (fun acc act -> match act with |Bddl_ast.Action {name ;_} -> 
     sanitize_name name :: acc ) [] acts in
   
   let to_eqns ids opp = List.fold_left (fun acc name -> 
@@ -292,7 +292,7 @@ let make_extra_cases bacts wacts =
   (to_eqns only_black "white" , to_eqns only_white "black")
 
 (** Translate domain into isLegal and move mappings and eqns*)
-let trans_domain (domain : Ast.domain) env =
+let trans_domain (domain : domain) env =
   (*for making extra isLegal cases*)
 
   let (Domain { bactions; wactions }) = domain in
@@ -322,7 +322,7 @@ let trans_domain (domain : Ast.domain) env =
   env
 
 (**translate given specification, returns mCRL2 AST and the starting player*)
-let trans_spec (spec : Ast.specification)(gamename : string) : specification * string =
+let trans_spec (spec : Bddl_ast.specification)(gamename : string) : specification * string =
   let (Spec { domain; problem }) = spec in
   let empty_env : env =
     {
